@@ -65,7 +65,7 @@ class MessageButton:
         if isinstance(self.button, types.KeyboardButtonUrl):
             return self.button.url
 
-    async def click(self, share_phone=None, share_geo=None, *, password=None, open_url=None):
+    async def click(self, share_phone=None, share_geo=None, *, password=None):
         """
         Emulates the behaviour of clicking this button.
 
@@ -79,8 +79,7 @@ class MessageButton:
         :tl:`StartBotRequest` will be invoked and the resulting updates
         returned.
 
-        If it's a :tl:`KeyboardButtonUrl`, the ``URL`` of the button will
-        be returned. If you pass ``open_url=True`` the URL of the button will
+        If it's a :tl:`KeyboardButtonUrl`, the URL of the button will
         be passed to ``webbrowser.open`` and return `True` on success.
 
         If it's a :tl:`KeyboardButtonRequestPhone`, you must indicate that you
@@ -117,10 +116,8 @@ class MessageButton:
                 bot=self._bot, peer=self._chat, start_param=self.button.query
             ))
         elif isinstance(self.button, types.KeyboardButtonUrl):
-            if open_url:
-                if "webbrowser" in sys.modules:
-                    return webbrowser.open(self.button.url)
-            return self.button.url
+            if "webbrowser" in sys.modules:
+                return webbrowser.open(self.button.url)
         elif isinstance(self.button, types.KeyboardButtonGame):
             req = functions.messages.GetBotCallbackAnswerRequest(
                 peer=self._chat, msg_id=self._msg_id, game=True
