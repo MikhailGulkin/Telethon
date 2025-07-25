@@ -1,11 +1,3 @@
-int ? = Int;
-long ? = Long;
-double ? = Double;
-string ? = String;
-
-bytes = Bytes;
-int256 = Int256;
-
 true#3fedd339 = True;
 
 boolFalse#bc799737 = Bool;
