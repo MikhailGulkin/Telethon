@@ -95,8 +95,7 @@ def get_display_name(entity):
         else:
             return ''
 
-    elif isinstance(entity, (
-            types.Chat, types.ChatForbidden, types.Channel, types.ChannelForbidden)):
+    elif isinstance(entity, (types.Chat, types.ChatForbidden, types.Channel)):
         return entity.title
 
     return ''
