@@ -391,7 +391,7 @@ class InlineBuilder:
                     'text geo contact game'.split(), args) if x[1]) or 'none')
             )
 
-        markup = self._client.build_reply_markup(buttons)
+        markup = self._client.build_reply_markup(buttons, inline_only=True)
         if text is not None:
             text, msg_entities = await self._client._parse_message_text(
                 text, parse_mode
