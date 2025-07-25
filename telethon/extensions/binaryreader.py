@@ -1,9 +1,11 @@
 """
 This module contains the BinaryReader utility class.
 """
-import struct
+import os
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone, timedelta
+from io import BytesIO
+from struct import unpack
 
 from ..errors import TypeNotFoundError
 from ..tl.alltlobjects import tlobjects
@@ -19,8 +21,7 @@ class BinaryReader:
     """
 
     def __init__(self, data):
-        self.stream = data or b''
-        self.position = 0
+        self.stream = BytesIO(data)
         self._last = None  # Should come in handy to spot -404 errors
 
     # region Reading
@@ -29,35 +30,23 @@ class BinaryReader:
     # https://core.telegram.org/mtproto
     def read_byte(self):
         """Reads a single byte value."""
-        value, = struct.unpack_from("<B", self.stream, self.position)
-        self.position += 1
-        return value
+        return self.read(1)[0]
 
     def read_int(self, signed=True):
         """Reads an integer (4 bytes) value."""
-        fmt = '<i' if signed else '<I'
-        value, = struct.unpack_from(fmt, self.stream, self.position)
-        self.position += 4
-        return value
+        return int.from_bytes(self.read(4), byteorder='little', signed=signed)
 
     def read_long(self, signed=True):
         """Reads a long integer (8 bytes) value."""
-        fmt = '<q' if signed else '<Q'
-        value, = struct.unpack_from(fmt, self.stream, self.position)
-        self.position += 8
-        return value
+        return int.from_bytes(self.read(8), byteorder='little', signed=signed)
 
     def read_float(self):
         """Reads a real floating point (4 bytes) value."""
-        value, = struct.unpack_from("<f", self.stream, self.position)
-        self.position += 4
-        return value
+        return unpack('<f', self.read(4))[0]
 
     def read_double(self):
         """Reads a real floating point (8 bytes) value."""
-        value, = struct.unpack_from("<d", self.stream, self.position)
-        self.position += 8
-        return value
+        return unpack('<d', self.read(8))[0]
 
     def read_large_int(self, bits, signed=True):
         """Reads a n-bits long integer value."""
@@ -66,12 +55,7 @@ class BinaryReader:
 
     def read(self, length=-1):
         """Read the given amount of bytes, or -1 to read all remaining."""
-        if length >= 0:
-            result = self.stream[self.position:self.position + length]
-            self.position += length
-        else:
-            result = self.stream[self.position:]
-            self.position += len(result)
+        result = self.stream.read(length)
         if (length >= 0) and (len(result) != length):
             raise BufferError(
                 'No more data left to read (need {}, got {}: {}); last read {}'
@@ -83,7 +67,7 @@ class BinaryReader:
 
     def get_bytes(self):
         """Gets the byte array representing the current buffer as a whole."""
-        return self.stream
+        return self.stream.getvalue()
 
     # endregion
 
@@ -169,24 +153,24 @@ class BinaryReader:
 
     def close(self):
         """Closes the reader, freeing the BytesIO stream."""
-        self.stream = b''
+        self.stream.close()
 
     # region Position related
 
     def tell_position(self):
         """Tells the current position on the stream."""
-        return self.position
+        return self.stream.tell()
 
     def set_position(self, position):
         """Sets the current position on the stream."""
-        self.position = position
+        self.stream.seek(position)
 
     def seek(self, offset):
         """
         Seeks the stream position given an offset from the current position.
         The offset may be negative.
         """
-        self.position += offset
+        self.stream.seek(offset, os.SEEK_CUR)
 
     # endregion
 
